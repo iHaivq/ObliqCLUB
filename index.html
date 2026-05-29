@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ObliqCLUB — Tier Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --muted: #888;
+    --dim: #555;
+    --white: #ffffff;
+    --accent: #ffffff;
+    --t1: #ffffff;
+    --t2: #d4d4d4;
+    --t3: #888888;
+    --t4: #444444;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  body { min-height: 100vh; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem; letter-spacing: 0.08em; color: var(--white);
+    text-decoration: none;
+  }
+  .logo span { color: var(--muted); }
+  .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-links a {
+    font-size: 0.8rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--white); }
+  .nav-search {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    padding: 6px 12px; border-radius: 4px; width: 200px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .nav-search:focus { border-color: var(--border2); }
+  .nav-search::placeholder { color: var(--dim); }
+
+  /* HERO */
+  .hero {
+    padding: 4rem 2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 0.75rem;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    letter-spacing: 0.04em; line-height: 1;
+    color: var(--white);
+  }
+  .hero p { font-size: 0.9rem; color: var(--muted); max-width: 420px; line-height: 1.6; }
+  .status-dot {
+    display: inline-block; width: 7px; height: 7px;
+    background: #22c55e; border-radius: 50%;
+    box-shadow: 0 0 6px #22c55e;
+    margin-right: 6px;
+  }
+  .api-status { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .api-status.offline .status-dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+  /* TABS */
+  .tabs-bar {
+    position: sticky; top: 56px; z-index: 90;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    display: flex; gap: 0; overflow-x: auto;
+    padding: 0 2rem;
+    scrollbar-width: none;
+  }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0.8rem 1.2rem; white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--white); border-bottom-color: var(--white); }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: 0.06em; color: var(--white);
+  }
+  .section-count {
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    color: var(--dim); background: var(--bg3);
+    border: 1px solid var(--border); padding: 3px 10px; border-radius: 3px;
+  }
+
+  /* TIER GROUP */
+  .tier-group { margin-bottom: 2.5rem; }
+  .tier-label {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tier-badge {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+    letter-spacing: 0.1em; padding: 2px 10px; border-radius: 3px;
+    border: 1px solid;
+  }
+  .tier-badge.T1 { color: var(--t1); border-color: var(--t1); }
+  .tier-badge.T2 { color: var(--t2); border-color: var(--t2); }
+  .tier-badge.T3 { color: var(--t3); border-color: var(--t3); }
+  .tier-badge.T4 { color: var(--t4); border-color: var(--t4); }
+  .tier-name-label { font-size: 0.75rem; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .tier-player-count { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--dim); }
+
+  /* PLAYERS GRID */
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .player-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    text-decoration: none;
+  }
+  .player-card:hover { border-color: var(--border2); background: var(--bg3); }
+  .player-avatar {
+    width: 38px; height: 38px; border-radius: 4px;
+    background: var(--bg3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--muted);
+    flex-shrink: 0; overflow: hidden;
+  }
+  .player-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .player-info { flex: 1; min-width: 0; }
+  .player-name {
+    font-weight: 500; font-size: 0.9rem; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .player-pts {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--dim);
+    margin-top: 2px;
+  }
+  .player-tier-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .player-tier-dot.T1 { background: var(--t1); }
+  .player-tier-dot.T2 { background: var(--t2); }
+  .player-tier-dot.T3 { background: var(--t3); }
+  .player-tier-dot.T4 { background: var(--t4); }
+
+  /* LEADERBOARD TABLE */
+  .lb-table { width: 100%; border-collapse: collapse; }
+  .lb-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .lb-table th {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: left; padding: 0 12px 10px;
+    font-weight: 400;
+  }
+  .lb-table th:first-child { width: 50px; text-align: center; }
+  .lb-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .lb-table tbody tr:hover { background: var(--bg2); }
+  .lb-table td { padding: 10px 12px; }
+  .lb-table td:first-child { text-align: center; }
+  .rank-num {
+    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    color: var(--dim);
+  }
+  .rank-1 .rank-num { color: var(--t1); font-weight: 500; }
+  .rank-2 .rank-num { color: var(--t2); }
+  .rank-3 .rank-num { color: var(--t3); }
+  .lb-name { font-weight: 500; font-size: 0.9rem; color: var(--white); display: flex; align-items: center; gap: 8px; }
+  .lb-sub { font-size: 0.75rem; color: var(--dim); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .lb-score {
+    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+    font-weight: 500; text-align: right;
+  }
+  .lb-tier { text-align: center; }
+
+  /* SEARCH RESULTS */
+  .search-view { display: none; }
+  .search-query-label {
+    font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem;
+  }
+  .search-query-label strong { color: var(--white); }
+
+  /* PLAYER PROFILE MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 8px; width: 100%; max-width: 480px;
+    padding: 1.5rem; position: relative;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 12px;
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 1.2rem; line-height: 1; transition: color 0.15s;
+  }
+  .modal-close:hover { color: var(--white); }
+  .modal-player-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.25rem; }
+  .modal-avatar {
+    width: 56px; height: 56px; border-radius: 6px;
+    background: var(--bg3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--muted);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .modal-player-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.04em; color: var(--white); }
+  .modal-player-sub { font-size: 0.8rem; color: var(--dim); margin-top: 2px; }
+  .modal-stats-row {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .modal-stat {
+    background: var(--bg3); border-radius: 4px; padding: 10px 12px;
+  }
+  .modal-stat-label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .modal-stat-value { font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: 500; color: var(--white); }
+  .modal-tiers-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+  }
+  .modal-tier-item {
+    background: var(--bg3); border-radius: 4px; padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-tier-gm { font-size: 0.8rem; color: var(--muted); }
+  .modal-tier-val {
+    font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem;
+    letter-spacing: 0.06em;
+  }
+  .modal-tier-val.T1 { color: var(--t1); }
+  .modal-tier-val.T2 { color: var(--t2); }
+  .modal-tier-val.T3 { color: var(--t3); }
+  .modal-tier-val.T4 { color: var(--t4); }
+  .modal-section-title {
+    font-size: 0.7rem; color: var(--dim); text-transform: uppercase;
+    letter-spacing: 0.08em; margin: 1rem 0 0.5rem;
+  }
+
+  /* LOADING / EMPTY */
+  .loading { text-align: center; padding: 4rem; }
+  .loading-spinner {
+    width: 24px; height: 24px; border: 2px solid var(--border);
+    border-top-color: var(--white); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { color: var(--dim); font-size: 0.85rem; }
+  .empty-msg { text-align: center; padding: 3rem; color: var(--dim); font-size: 0.85rem; }
+
+  /* API CONFIG BANNER */
+  .api-banner {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 14px 16px;
+    margin-bottom: 1.5rem; font-size: 0.82rem; color: var(--muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .api-banner code {
+    font-family: 'DM Mono', monospace; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 2px 7px; color: var(--text); font-size: 0.78rem;
+  }
+  .api-banner a { color: var(--white); text-decoration: underline; cursor: pointer; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem; text-align: center;
+    color: var(--dim); font-size: 0.75rem;
+    margin-top: 4rem;
+  }
+  footer strong { color: var(--muted); }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .main { padding: 1rem; }
+    .players-grid { grid-template-columns: 1fr 1fr; }
+    .nav-search { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">OBLIQ<span>CLUB</span></a>
+  <ul class="nav-links">
+    <li><a href="#" class="active" data-view="tiers">Tiers</a></li>
+    <li><a href="#" data-view="leaderboard">Leaderboard</a></li>
+  </ul>
+  <input class="nav-search" type="text" placeholder="Search player..." id="searchInput" autocomplete="off">
+</nav>
+
+<div class="hero">
+  <h1>ObliqCLUB</h1>
+  <p>Competitive Minecraft tier rankings — Crystal, Sword, Axe, UHC and more.</p>
+  <div class="api-status" id="apiStatus">
+    <span class="status-dot"></span> Connecting to API...
+  </div>
+</div>
+
+<div class="tabs-bar" id="tabsBar"></div>
+
+<div class="main">
+  <div id="apiConfigBanner" class="api-banner" style="display:none">
+    ⚠ Could not connect to <code>https://ethics-shop-anonymous-blogs.trycloudflare.com</code>. Make sure your bot is running.
+    <a onclick="promptApiUrl()">Change API URL</a>
+  </div>
+
+  <!-- TIERS VIEW -->
+  <div id="tiersView"></div>
+
+  <!-- LEADERBOARD VIEW -->
+  <div id="leaderboardView" style="display:none"></div>
+
+  <!-- SEARCH VIEW -->
+  <div id="searchView" class="search-view"></div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<footer>
+  <strong>ObliqCLUB</strong> · Tier Rankings System · Powered by ObliqBot API
+</footer>
+
+<script>
+const GAMEMODES = [
+  { id: 'crystal', name: 'Crystal', emoji: '🔮' },
+  { id: 'sword',   name: 'Sword',   emoji: '⚔️' },
+  { id: 'axe',     name: 'Axe',     emoji: '🪓' },
+  { id: 'uhc',     name: 'UHC',     emoji: '🍎' },
+  { id: 'netherpot', name: 'NetherPot', emoji: '🧪' },
+  { id: 'mace',    name: 'Mace',    emoji: '🔨' },
+  { id: 'smp',     name: 'SMP',     emoji: '🎡' },
+  { id: 'cart',    name: 'Cart',    emoji: '🛒' },
+  { id: 'spear',   name: 'Spear',   emoji: '🔱' },
+];
+const TIERS = ['T1','T2','T3','T4'];
+const TIER_NAMES = { T1: 'Tier 1', T2: 'Tier 2', T3: 'Tier 3', T4: 'Tier 4' };
+const TIER_SCORE = { T1: 400, T2: 300, T3: 200, T4: 100 };
+
+let API_URL = localStorage.getItem('obliq_api_url') || 'https://ethics-shop-anonymous-blogs.trycloudflare.com';
+let allPlayers = [];
+let leaderboardData = [];
+let currentView = 'tiers';
+let currentGamemode = 'crystal';
+
+function promptApiUrl() {
+  const u = prompt('Enter your bot API URL:', API_URL);
+  if (u) { API_URL = u.trim(); localStorage.setItem('obliq_api_url', API_URL); init(); }
+}
+
+async function apiFetch(path) {
+  const r = await fetch(API_URL + path);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function mcAvatar(name) {
+  return `https://mc-heads.net/avatar/${encodeURIComponent(name)}/38`;
+}
+
+function tierColor(t) {
+  const m = { T1: '#f0f0f0', T2: '#d4d4d4', T3: '#888888', T4: '#444444' };
+  return m[t] || '#555';
+}
+
+/* ── BUILD TABS ── */
+function buildTabs() {
+  const bar = document.getElementById('tabsBar');
+  GAMEMODES.forEach(gm => {
+    const b = document.createElement('button');
+    b.className = 'tab-btn' + (gm.id === currentGamemode ? ' active' : '');
+    b.textContent = gm.name;
+    b.dataset.gm = gm.id;
+    b.addEventListener('click', () => {
+      currentGamemode = gm.id;
+      document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      if (currentView === 'tiers') renderTiers();
+    });
+    bar.appendChild(b);
+  });
+}
+
+/* ── RENDER TIERS VIEW ── */
+function renderTiers() {
+  const view = document.getElementById('tiersView');
+  const gmPlayers = allPlayers.filter(p => p.tiers && p.tiers[currentGamemode]);
+  const byTier = {};
+  TIERS.forEach(t => byTier[t] = []);
+  gmPlayers.forEach(p => {
+    const t = p.tiers[currentGamemode].tier;
+    if (byTier[t]) byTier[t].push(p);
+  });
+
+  let html = `<div class="section-header">
+    <span class="section-title">${currentGamemode.toUpperCase()} TIERS</span>
+    <span class="section-count">${gmPlayers.length} players</span>
+  </div>`;
+
+  TIERS.forEach(tier => {
+    const list = byTier[tier];
+    if (!list.length) return;
+    html += `<div class="tier-group">
+      <div class="tier-label">
+        <span class="tier-badge ${tier}">${tier}</span>
+        <span class="tier-name-label">${TIER_NAMES[tier]}</span>
+        <span class="tier-player-count">${list.length} players</span>
+      </div>
+      <div class="players-grid">`;
+    list.sort((a,b) => (b.points||0)-(a.points||0)).forEach(p => {
+      const name = p.mc_username || p.discord_id || '—';
+      const initials = name.substring(0,2).toUpperCase();
+      html += `<div class="player-card" onclick="openPlayer('${(p.discord_id||'').replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')">
+        <div class="player-avatar">
+          <img src="${mcAvatar(name)}" alt="${name}" onerror="this.parentNode.textContent='${initials}'" loading="lazy">
+        </div>
+        <div class="player-info">
+          <div class="player-name">${name}</div>
+          <div class="player-pts">${p.points || 0} pts</div>
+        </div>
+        <div class="player-tier-dot ${tier}"></div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  if (!gmPlayers.length) html += `<div class="empty-msg">No players tiered in this gamemode yet.</div>`;
+  view.innerHTML = html;
+}
+
+/* ── RENDER LEADERBOARD ── */
+function renderLeaderboard() {
+  const view = document.getElementById('leaderboardView');
+  const data = leaderboardData;
+  if (!data.length) { view.innerHTML = '<div class="empty-msg">No leaderboard data.</div>'; return; }
+
+  let html = `<div class="section-header">
+    <span class="section-title">OVERALL LEADERBOARD</span>
+    <span class="section-count">Top ${data.length}</span>
+  </div>
+  <table class="lb-table">
+    <thead><tr>
+      <th>#</th><th>Player</th><th>Best Tier</th><th>Gamemode</th><th style="text-align:right">Score</th>
+    </tr></thead><tbody>`;
+
+  data.forEach((p, i) => {
+    const name = p.mc_username || p.discord_id || '—';
+    const rankClass = i < 3 ? `rank-${i+1}` : '';
+    const tier = p.best_tier || '—';
+    const gm = p.best_gamemode ? GAMEMODES.find(g=>g.id===p.best_gamemode)?.name || p.best_gamemode : '—';
+    html += `<tr class="${rankClass}" onclick="openPlayer('${(p.discord_id||'').replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')">
+      <td><span class="rank-num">${p.rank}</span></td>
+      <td>
+        <div class="lb-name">${name}</div>
+        <div class="lb-sub">discord: ${p.discord_id || '—'}</div>
+      </td>
+      <td class="lb-tier"><span class="tier-badge ${tier}" style="font-size:0.8rem;padding:1px 8px">${tier}</span></td>
+      <td style="color:var(--muted);font-size:0.85rem">${gm}</td>
+      <td class="lb-score" style="color:${tierColor(tier)}">${p.total_score}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  view.innerHTML = html;
+}
+
+/* ── SEARCH ── */
+function renderSearch(query) {
+  const view = document.getElementById('searchView');
+  const q = query.toLowerCase().trim();
+  if (!q) { view.style.display = 'none'; return; }
+
+  const results = allPlayers.filter(p =>
+    (p.mc_username || '').toLowerCase().includes(q) ||
+    (p.discord_id || '').toLowerCase().includes(q)
+  );
+
+  let html = `<div class="search-query-label">Results for <strong>"${query}"</strong> — ${results.length} found</div>`;
+  if (results.length) {
+    html += `<div class="players-grid">`;
+    results.forEach(p => {
+      const name = p.mc_username || p.discord_id || '—';
+      const initials = name.substring(0,2).toUpperCase();
+      const tier = p.best_tier ? p.best_tier.tier || p.best_tier : null;
+      html += `<div class="player-card" onclick="openPlayer('${(p.discord_id||'').replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')">
+        <div class="player-avatar">
+          <img src="${mcAvatar(name)}" alt="${name}" onerror="this.parentNode.textContent='${initials}'" loading="lazy">
+        </div>
+        <div class="player-info">
+          <div class="player-name">${name}</div>
+          <div class="player-pts">${p.points || 0} pts</div>
+        </div>
+        ${tier ? `<div class="player-tier-dot ${tier}"></div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="empty-msg">No players found for "${query}".</div>`;
+  }
+  view.innerHTML = html;
+  view.style.display = 'block';
+}
+
+/* ── PLAYER MODAL ── */
+async function openPlayer(discordId, mcUsername) {
+  const overlay = document.getElementById('modalOverlay');
+  const content = document.getElementById('modalContent');
+  overlay.classList.add('open');
+  content.innerHTML = `<div class="loading"><div class="loading-spinner"></div><p>Loading profile…</p></div>`;
+
+  let profile = allPlayers.find(p => p.discord_id === discordId || p.mc_username === mcUsername);
+  if (!profile) {
+    try {
+      profile = await apiFetch(discordId ? `/api/players/${discordId}` : `/api/players/mc/${mcUsername}`);
+    } catch(e) {
+      content.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button><div class="empty-msg">Could not load profile.</div>`;
+      return;
+    }
+  }
+
+  const name = profile.mc_username || profile.discord_id || '—';
+  const initials = name.substring(0,2).toUpperCase();
+  const tierEntries = profile.tiers ? Object.entries(profile.tiers) : [];
+  const bestTier = profile.best_tier ? (profile.best_tier.tier || profile.best_tier) : null;
+  const tierCount = tierEntries.length;
+
+  let tiersHtml = tierEntries.length
+    ? tierEntries.map(([gmId, info]) => {
+        const gmName = GAMEMODES.find(g=>g.id===gmId)?.name || gmId;
+        const t = info.tier || info;
+        return `<div class="modal-tier-item">
+          <span class="modal-tier-gm">${gmName}</span>
+          <span class="modal-tier-val ${t}">${t}</span>
+        </div>`;
+      }).join('')
+    : `<div style="color:var(--dim);font-size:0.82rem;padding:8px 0">No tiers recorded.</div>`;
+
+  content.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-player-header">
+      <div class="modal-avatar">
+        <img src="${mcAvatar(name)}" alt="${name}" onerror="this.parentNode.textContent='${initials}'">
+      </div>
+      <div>
+        <div class="modal-player-name">${name}</div>
+        <div class="modal-player-sub">ID: ${profile.discord_id || 'unlinked'}</div>
+      </div>
+    </div>
+    <div class="modal-stats-row">
+      <div class="modal-stat">
+        <div class="modal-stat-label">Points</div>
+        <div class="modal-stat-value">${profile.points || 0}</div>
+      </div>
+      <div class="modal-stat">
+        <div class="modal-stat-label">Best Tier</div>
+        <div class="modal-stat-value" style="color:${tierColor(bestTier)}">${bestTier || '—'}</div>
+      </div>
+      <div class="modal-stat">
+        <div class="modal-stat-label">Gamemodes</div>
+        <div class="modal-stat-value">${tierCount}</div>
+      </div>
+      <div class="modal-stat">
+        <div class="modal-stat-label">Linked</div>
+        <div class="modal-stat-value" style="color:${profile.linked ? '#22c55e' : 'var(--dim)'}">
+          ${profile.linked ? 'Yes' : 'No'}
+        </div>
+      </div>
+    </div>
+    <div class="modal-section-title">Tier Rankings</div>
+    <div class="modal-tiers-grid">${tiersHtml}</div>
+  `;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+/* ── VIEW SWITCHING ── */
+function setView(v) {
+  currentView = v;
+  document.getElementById('tiersView').style.display = v === 'tiers' ? 'block' : 'none';
+  document.getElementById('leaderboardView').style.display = v === 'leaderboard' ? 'block' : 'none';
+  document.getElementById('searchView').style.display = 'none';
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.view === v);
+  });
+  document.getElementById('tabsBar').style.display = v === 'tiers' ? 'flex' : 'none';
+  if (v === 'leaderboard') renderLeaderboard();
+}
+
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', e => { e.preventDefault(); setView(a.dataset.view); });
+});
+
+/* ── SEARCH ── */
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  searchTimeout = setTimeout(() => {
+    if (q.length > 1) {
+      document.getElementById('tiersView').style.display = 'none';
+      document.getElementById('leaderboardView').style.display = 'none';
+      renderSearch(q);
+    } else {
+      document.getElementById('searchView').style.display = 'none';
+      if (currentView === 'tiers') document.getElementById('tiersView').style.display = 'block';
+      if (currentView === 'leaderboard') document.getElementById('leaderboardView').style.display = 'block';
+    }
+  }, 200);
+});
+
+/* ── INIT ── */
+async function init() {
+  document.getElementById('apiConfigBanner').style.display = 'none';
+  const statusEl = document.getElementById('apiStatus');
+
+  try {
+    const [playersRes, lbRes] = await Promise.all([
+      apiFetch('/api/players'),
+      apiFetch('/api/leaderboard')
+    ]);
+    allPlayers = playersRes.players || [];
+    leaderboardData = lbRes.leaderboard || [];
+    statusEl.innerHTML = `<span class="status-dot"></span> API connected · ${allPlayers.length} players`;
+    statusEl.className = 'api-status';
+    renderTiers();
+  } catch(e) {
+    statusEl.innerHTML = `<span class="status-dot"></span> API offline`;
+    statusEl.className = 'api-status offline';
+    document.getElementById('apiConfigBanner').style.display = 'flex';
+    document.getElementById('tiersView').innerHTML = `<div class="empty-msg">Could not load data. Make sure your bot is running on <strong>${API_URL}</strong>.</div>`;
+  }
+}
+
+buildTabs();
+setView('tiers');
+init();
+</script>
+</body>
+</html>
